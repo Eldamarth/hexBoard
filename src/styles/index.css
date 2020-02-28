@@ -12,5 +12,5 @@ code {
     monospace;
 }
 canvas{
-  border:1px;
+  border:1px solid;
 }
