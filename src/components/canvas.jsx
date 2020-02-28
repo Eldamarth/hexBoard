@@ -7,6 +7,10 @@ class Canvas extends Component{
 
         this.state ={
             hexSize : 20,
+            hexOrigin: {
+                x:400,
+                y:300,
+            }
         }
     }
 
@@ -24,7 +28,22 @@ class Canvas extends Component{
         const {canvasHeight, canvasWidth} = this.state.canvasSize;
         this.canvasHex.width = canvasWidth;
         this.canvasHex.height = canvasHeight;
-        this.drawHex(this.canvasHex, {x:50, y:50})
+        // this.drawHex(this.canvasHex, {x:50, y:50})
+        this.drawHexes();
+        
+    }
+
+    drawHexes(){
+        for (let row = 0; row <=4; row++) {
+            for (let col = 0; col <=4; col++) {
+                // console.log(row,col);
+                let center = this.hexToPix(this.Hex(row,col));
+                // console.log(center);
+                this.drawHex(this.canvasHex, center);
+                this.drawHexCoordinates(this.canvasHex, center, this.Hex(row,col))
+            }
+            
+        }
     }
 
     drawHex(canvasID, center) {
@@ -32,6 +51,7 @@ class Canvas extends Component{
            let start = this.getHexCornerCoord(center,i);
            let end = this.getHexCornerCoord(center, i+1);
            this.drawLine(canvasID, {x:start.x,y:start.y},{x: end.x,y: end.y})
+          
             
         }
     }
@@ -44,9 +64,21 @@ class Canvas extends Component{
         let y = center.y + this.state.hexSize * Math.sin(angle_rad);
         return this.Point(x,y);
     }
+
+    hexToPix(hex){
+
+        let {hexOrigin} = this.state;
+        let x = this.state.hexSize * (Math.sqrt(3) * hex.col  +  Math.sqrt(3)/2 * hex.row)+hexOrigin.x;
+        let y = this.state.hexSize * (3/2 * hex.row)+hexOrigin.y;
+        return this.Point(x, y);
+    }
     
     Point(x,y) {
         return {x: x, y: y}
+    }
+
+    Hex(c,r) {
+        return {col:c,row:r}
     }
 
     drawLine(canvasID, start, end){
@@ -56,6 +88,12 @@ class Canvas extends Component{
         ctx.lineTo(end.x, end.y);
         ctx.stroke();
         ctx.closePath();
+    }
+
+    drawHexCoordinates(canvasID, center, hex){
+        const ctx = canvasID.getContext("2d");
+        ctx.fillText(hex.col, center.x-10, center.y);
+        ctx.fillText(hex.row, center.x+7, center.y);
     }
 
     render() {
