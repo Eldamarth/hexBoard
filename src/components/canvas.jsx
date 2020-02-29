@@ -45,11 +45,13 @@ class Canvas extends Component{
 
         for (let row = -rTopSide; row <=rBottomSide; row++) {
             for (let col = -cLeftSide; col <= cRightSide; col++) {
-                // console.log(row,col);
+
                 let center = this.hexToPix(this.Hex(col,row));
-                // console.log(center);
-                this.drawHex(this.canvasHex, center);
+                if ((center.x > hexWidth/2 && center.x < canvasWidth-hexWidth)&& (center.y > hexHeight/2 && center.y < canvasHeight-hexHeight)){
+                    this.drawHex(this.canvasHex, center);
                 this.drawHexCoordinates(this.canvasHex, center, this.Hex(row,col))
+                }
+                
             }
             
         }
