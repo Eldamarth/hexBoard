@@ -47,7 +47,7 @@ class Canvas extends Component{
             for (let col = -cLeftSide; col <= cRightSide; col++) {
 
                 let center = this.hexToPix(this.Hex(col,row));
-                if ((center.x > hexWidth/2 && center.x < canvasWidth-hexWidth)&& (center.y > hexHeight/2 && center.y < canvasHeight-hexHeight)){
+                if ((center.x > hexWidth/2 && center.x < canvasWidth-hexWidth)&& (center.y > hexHeight/2 && center.y < canvasHeight-hexHeight/2)){
                     this.drawHex(this.canvasHex, center);
                 this.drawHexCoordinates(this.canvasHex, center, this.Hex(row,col))
                 }
