@@ -14,7 +14,6 @@ class Canvas extends Component{
         }
     }
 
-
     componentWillMount(){
         let hexParameters = this.getHexParameters();
         this.setState({
@@ -110,7 +109,8 @@ class Canvas extends Component{
     drawHexCoordinates(canvasID, center, hex){
         const ctx = canvasID.getContext("2d");
         ctx.fillText(hex.col, center.x-10, center.y);
-        ctx.fillText(hex.row, center.x+7, center.y);
+        // ctx.fillText(',', center.x,center.y)
+        ctx.fillText(hex.row, center.x+3, center.y);
     }
 
     render() {
