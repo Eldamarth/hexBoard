@@ -16,11 +16,13 @@ class Canvas extends Component{
 
 
     componentWillMount(){
+        let hexParameters = this.getHexParameters();
         this.setState({
             canvasSize:{
                 canvasHeight: 600,
                 canvasWidth: 800,
-            }
+            },
+            hexParameters: hexParameters,
         })
     }
 
@@ -34,10 +36,18 @@ class Canvas extends Component{
     }
 
     drawHexes(){
-        for (let row = 0; row <=4; row++) {
-            for (let col = 0; col <=4; col++) {
+        const {canvasWidth, canvasHeight} = this.state.canvasSize;
+        const { hexWidth, hexHeight, vertDist, horDist} = this.state.hexParameters;
+        const hexOrigin = this.state.hexOrigin;
+        let cLeftSide = Math.round(hexOrigin.x/hexWidth)*4;
+        let cRightSide = Math.round((canvasWidth-hexOrigin.x)/hexWidth*2);
+        let rTopSide = Math.round(hexOrigin.y/(hexHeight/2));
+        let rBottomSide = Math.round((canvasHeight - hexOrigin.y)/(hexHeight/2));
+
+        for (let row = -rTopSide; row <=rBottomSide; row++) {
+            for (let col = -cLeftSide; col <= cRightSide; col++) {
                 // console.log(row,col);
-                let center = this.hexToPix(this.Hex(row,col));
+                let center = this.hexToPix(this.Hex(col,row));
                 // console.log(center);
                 this.drawHex(this.canvasHex, center);
                 this.drawHexCoordinates(this.canvasHex, center, this.Hex(row,col))
@@ -65,8 +75,15 @@ class Canvas extends Component{
         return this.Point(x,y);
     }
 
-    hexToPix(hex){
+    getHexParameters(){
+        let hexHeight = this.state.hexSize * 2;
+        let hexWidth = Math.sqrt(3)/2 * hexHeight;
+        let vertDist = hexHeight *0.75;
+        let horDist = hexWidth;
+        return  { hexWidth, hexHeight, vertDist, horDist} 
+    }
 
+    hexToPix(hex){
         let {hexOrigin} = this.state;
         let x = this.state.hexSize * (Math.sqrt(3) * hex.col  +  Math.sqrt(3)/2 * hex.row)+hexOrigin.x;
         let y = this.state.hexSize * (3/2 * hex.row)+hexOrigin.y;
