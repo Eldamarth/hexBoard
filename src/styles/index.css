@@ -13,4 +13,6 @@ code {
 }
 canvas{
   border:1px solid;
+  position: absolute;
+  left:0;
 }
