@@ -5,7 +5,6 @@ class Canvas extends Component {
   constructor(props) {
     super(props);
 
-
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.state = {
       hexSize: 20,
@@ -37,6 +36,18 @@ class Canvas extends Component {
     this.drawHexes();
   }
 
+  shouldComponentUpdate(nextProps, nextState){
+    if (nextState.currentHex !== this.state.currentHex){
+      const {col, row, s, x, y} = nextState.currentHex;
+      const {canvasWidth, canvasHeight} = this.state.canvasSize;
+      const ctx = this.canvasCoordinates.getContext("2d");
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      this.drawHex(this.canvasCoordinates, this.Point(x,y), "lime", 2)
+      return true;
+    }
+    return false;
+  }
+
   drawHexes() {
     const { canvasWidth, canvasHeight } = this.state.canvasSize;
     const { hexWidth, hexHeight, vertDist, horDist } = this.state.hexParameters;
@@ -59,13 +70,14 @@ class Canvas extends Component {
         if (
           x > hexWidth / 2 &&
           x < canvasWidth - hexWidth / 2 &&
-          y > hexHeight / 2 && y < canvasHeight - hexHeight / 2
+          y > hexHeight / 2 &&
+          y < canvasHeight - hexHeight / 2
         ) {
           this.drawHex(this.canvasHex, this.Point(x, y));
           this.drawHexCoordinates(
             this.canvasHex,
             this.Point(x, y),
-            this.Hex(col - posSpacer, row)
+            this.Hex(col - posSpacer, row, -col - row)
           );
         }
       }
@@ -81,27 +93,30 @@ class Canvas extends Component {
         if (
           x > hexWidth / 2 &&
           x < canvasWidth - hexWidth / 2 &&
-          y > hexHeight / 2 && y < canvasHeight - hexHeight / 2
+          y > hexHeight / 2 &&
+          y < canvasHeight - hexHeight / 2
         ) {
           this.drawHex(this.canvasHex, this.Point(x, y));
           this.drawHexCoordinates(
             this.canvasHex,
             this.Point(x, y),
-            this.Hex(col + negSpacer, row)
+            this.Hex(col + negSpacer, row, -col - row)
           );
         }
       }
     }
   }
 
-  drawHex(canvasID, center) {
+  drawHex(canvasID, center, color, width) {
     for (let i = 0; i <= 5; i++) {
       let start = this.getHexCornerCoord(center, i);
       let end = this.getHexCornerCoord(center, i + 1);
       this.drawLine(
         canvasID,
         { x: start.x, y: start.y },
-        { x: end.x, y: end.y }
+        { x: end.x, y: end.y },
+        color,
+        width
       );
     }
   }
@@ -123,11 +138,16 @@ class Canvas extends Component {
     return { hexWidth, hexHeight, vertDist, horDist };
   }
 
-  getCanvasPosition(canvasID){
-      let rect = canvasID.getBoundingClientRect();
-      this.setState({
-          canvasPosition: { left: rect.left, right:rect.right,top:rect.top,bottom:rect.bottom}
-      })
+  getCanvasPosition(canvasID) {
+    let rect = canvasID.getBoundingClientRect();
+    this.setState({
+      canvasPosition: {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom
+      }
+    });
   }
 
   hexToPix(hex) {
@@ -140,18 +160,32 @@ class Canvas extends Component {
     return this.Point(x, y);
   }
 
+  pixToHex(point) {
+    let { hexSize } = this.state;
+    let { hexOrigin } = this.state;
+
+    let c =
+      (((point.x - hexOrigin.x) * Math.sqrt(3)) / 3 -
+        (point.y - hexOrigin.y) / 3) /
+      hexSize;
+    let r = ((2 / 3) * (point.y - hexOrigin.y)) / hexSize;
+    return this.Hex(c, r, -c - r);
+  }
+
   Point(x, y) {
     return { x: x, y: y };
   }
 
-  Hex(c, r) {
-    return { col: c, row: r };
+  Hex(c, r, s) {
+    return { col: c, row: r, s: s };
   }
 
-  drawLine(canvasID, start, end) {
+  drawLine(canvasID, start, end, color, width) {
     const ctx = canvasID.getContext("2d");
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
     ctx.lineTo(end.x, end.y);
     ctx.stroke();
     ctx.closePath();
@@ -159,20 +193,50 @@ class Canvas extends Component {
 
   drawHexCoordinates(canvasID, center, hex) {
     const ctx = canvasID.getContext("2d");
-    ctx.fillText(hex.col, center.x - 10, center.y);
-    // ctx.fillText(',', center.x,center.y)
-    ctx.fillText(hex.row, center.x + 3, center.y);
+    ctx.fillText(hex.col, center.x + 6, center.y);
+    ctx.fillText(hex.row, center.x - 3, center.y + 15);
+    ctx.fillText(hex.s, center.x - 12, center.y);
   }
-  handleMouseMove(e){
-      const {left, right, top, bottom} = this.state.canvasPosition;
-      console.log(e.pageX-left,e.pageY-top)
 
+  handleMouseMove(e) {
+    const { left, right, top, bottom } = this.state.canvasPosition;
+    let offsetX = e.pageX - left;
+    let offsetY = e.pageY - top;
+    const { col, row, s } = this.cubeRound(
+      this.pixToHex(this.Point(offsetX, offsetY))
+    );
+    const { x, y } = this.hexToPix(this.Hex(col, row, s));
+
+    // this.drawHex(this.canvasCoordinates, this.Point(x, y), "green", 2);
+    this.setState({
+      currentHex: {col, row, s, x, y}
+    })
+  }
+
+  // VIDEO 4 - 16:48
+  cubeRound(cube) {
+    let rx = Math.round(cube.col);
+    let ry = Math.round(cube.row);
+    let rz = Math.round(cube.s);
+
+    let x_diff = Math.abs(rx - cube.x);
+    let y_diff = Math.abs(ry - cube.y);
+    let z_diff = Math.abs(rz - cube.z);
+
+    if (x_diff > y_diff && x_diff > z_diff) {
+      rx = -ry - rz;
+    } else if (y_diff > z_diff) {
+      ry = -rx - rz;
+    } else {
+      rz = -rx - ry;
+    }
+
+    return this.Hex(rx, ry, rz);
   }
 
   render() {
     return (
       <div>
-        
         <canvas ref={canvasHex => (this.canvasHex = canvasHex)}></canvas>
         <canvas
           ref={canvasCoordinates =>
