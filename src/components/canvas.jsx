@@ -42,6 +42,7 @@ class Canvas extends Component {
       const {canvasWidth, canvasHeight} = this.state.canvasSize;
       const ctx = this.canvasCoordinates.getContext("2d");
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      this.drawNeighbors(this.Hex(col, row, s));
       this.drawHex(this.canvasCoordinates, this.Point(x,y), "lime", 2)
       return true;
     }
@@ -77,7 +78,7 @@ class Canvas extends Component {
           this.drawHexCoordinates(
             this.canvasHex,
             this.Point(x, y),
-            this.Hex(col - posSpacer, row, -col - row)
+            this.Hex(col - posSpacer, row, -col-posSpacer - row)
           );
         }
       }
@@ -100,7 +101,7 @@ class Canvas extends Component {
           this.drawHexCoordinates(
             this.canvasHex,
             this.Point(x, y),
-            this.Hex(col + negSpacer, row, -col - row)
+            this.Hex(col + negSpacer, row, -col+negSpacer - row)
           );
         }
       }
@@ -198,6 +199,14 @@ class Canvas extends Component {
     ctx.fillText(hex.s, center.x - 12, center.y);
   }
 
+  drawNeighbors(h) {
+    for (let i = 0; i <=5; i++) {
+      const {col,row,s} = this.getCubeNeighbor(this.Hex(h.col, h.row,h.s),i);
+      const {x,y} = this.hexToPix(this.Hex(col,row,s));
+      this.drawHex(this.canvasCoordinates, this.Point(x,y), "red", 2)
+    }
+  }
+
   handleMouseMove(e) {
     const { left, right, top, bottom } = this.state.canvasPosition;
     let offsetX = e.pageX - left;
@@ -232,6 +241,19 @@ class Canvas extends Component {
     }
 
     return this.Hex(rx, ry, rz);
+  }
+
+  cubeDirection(direction){
+    const cubeDirections = [this.Hex(1,0,-1), this.Hex(1,-1,0),this.Hex(0,-1,1), this.Hex(-1,0,1), this.Hex(-1,1,0), this.Hex(0,1,-1)];
+    return cubeDirections[direction];
+  }
+
+  cubeAdd(a, b){
+    return this.Hex(a.col+b.col, a.row+b.row, a.s + b.s );
+  }
+
+  getCubeNeighbor(h,direction){
+    return this.cubeAdd(h, this.cubeDirection(direction))
   }
 
   render() {
