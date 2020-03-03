@@ -282,8 +282,8 @@ class Canvas extends Component {
     let ry = Math.round(cube.row);
     let rz = Math.round(cube.s);
 
-    let xDiff = Math.abs(rx - cube.x);
-    let yDiff = Math.abs(ry - cube.y);
+    let xDiff = Math.abs(rx - cube.col);
+    let yDiff = Math.abs(ry - cube.row);
     let zDiff = Math.abs(rz - cube.s);
 
     if (xDiff > yDiff && xDiff > zDiff) {
