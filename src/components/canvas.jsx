@@ -36,19 +36,24 @@ class Canvas extends Component {
     this.drawHexes();
   }
 
-  shouldComponentUpdate(nextProps, nextState){
-    if (nextState.currentHex !== this.state.currentHex){
-      const {col, row, s, x, y} = nextState.currentHex;
-      const {canvasWidth, canvasHeight} = this.state.canvasSize;
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextState.currentHex !== this.state.currentHex) {
+      const { col, row, s, x, y } = nextState.currentHex;
+      const { canvasWidth, canvasHeight } = this.state.canvasSize;
       const ctx = this.canvasCoordinates.getContext("2d");
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       // this.drawNeighbors(this.Hex(col, row, s));
       let currentDistanceLine = nextState.currentDistanceLine;
       // console.log(currentDistanceLine)
-      for (let i = 0; i <= currentDistanceLine.length-1 ; i++) {
-        this.drawHex(this.canvasCoordinates,this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y), "lime", 2)
+      for (let i = 0; i <= currentDistanceLine.length - 1; i++) {
+        this.drawHex(
+          this.canvasCoordinates,
+          this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y),
+          "lime",
+          2
+        );
       }
-      this.drawHex(this.canvasCoordinates, this.Point(x,y), "lime", 2)
+      this.drawHex(this.canvasCoordinates, this.Point(x, y), "lime", 2);
       return true;
     }
     return false;
@@ -79,11 +84,11 @@ class Canvas extends Component {
           y > hexHeight / 2 &&
           y < canvasHeight - hexHeight / 2
         ) {
-          this.drawHex(this.canvasHex, this.Point(x, y));
+          this.drawHex(this.canvasHex, this.Point(x, y), "grey");
           this.drawHexCoordinates(
             this.canvasHex,
             this.Point(x, y),
-            this.Hex(col - posSpacer, row, -col-posSpacer - row)
+            this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
           );
         }
       }
@@ -102,11 +107,11 @@ class Canvas extends Component {
           y > hexHeight / 2 &&
           y < canvasHeight - hexHeight / 2
         ) {
-          this.drawHex(this.canvasHex, this.Point(x, y));
+          this.drawHex(this.canvasHex, this.Point(x, y), "grey");
           this.drawHexCoordinates(
             this.canvasHex,
             this.Point(x, y),
-            this.Hex(col + negSpacer, row, -col+negSpacer - row)
+            this.Hex(col + negSpacer, row, -(col + negSpacer) - row)
           );
         }
       }
@@ -205,10 +210,13 @@ class Canvas extends Component {
   }
 
   drawNeighbors(h) {
-    for (let i = 0; i <=5; i++) {
-      const {col,row,s} = this.getCubeNeighbor(this.Hex(h.col, h.row,h.s),i);
-      const {x,y} = this.hexToPix(this.Hex(col,row,s));
-      this.drawHex(this.canvasCoordinates, this.Point(x,y), "red", 2)
+    for (let i = 0; i <= 5; i++) {
+      const { col, row, s } = this.getCubeNeighbor(
+        this.Hex(h.col, h.row, h.s),
+        i
+      );
+      const { x, y } = this.hexToPix(this.Hex(col, row, s));
+      this.drawHex(this.canvasCoordinates, this.Point(x, y), "red", 2);
     }
   }
 
@@ -222,45 +230,51 @@ class Canvas extends Component {
       this.pixToHex(this.Point(offsetX, offsetY))
     );
     const { x, y } = this.hexToPix(this.Hex(col, row, s));
-    this.getDistanceLine(this.Hex(0,0,0), this.Hex(col,row,s))
+    this.getDistanceLine(this.Hex(0, 0, 0), this.Hex(col, row, s));
     if (
       x > hexWidth / 2 &&
       x < canvasWidth - hexWidth / 2 &&
       y > hexHeight / 2 &&
       y < canvasHeight - hexHeight / 2
     ) {
-        this.setState({
-      currentHex: {col, row, s, x, y}
-    })
+      this.setState({
+        currentHex: { col, row, s, x, y }
+      });
     }
-  
   }
 
-  linearInt(a,b,t){
-    return (a+(b-a)*t)
+  linearInt(a, b, t) {
+    return a + (b - a) * t;
   }
 
-  getDistanceLine(hexA, hexB){
+  getDistanceLine(hexA, hexB) {
     let dist = this.cubeDistance(hexA, hexB);
-    var arr =[];
+    var arr = [];
     for (let i = 0; i <= dist; i++) {
-      let center = this.hexToPix(this.cubeRound(this.cubeLinearInt(hexA, hexB, 1.0/dist*i)));
+      let center = this.hexToPix(
+        this.cubeRound(this.cubeLinearInt(hexA, hexB, (1.0 / dist) * i))
+      );
       arr = arr.concat(center);
     }
+    console.log(arr);
     this.setState({
-      currentDistanceLine:arr
-    })
+      currentDistanceLine: arr
+    });
   }
 
-  cubeDistance(hexA,hexB){
-    const {col, row, s} = this.cubeSubtract(hexA, hexB);
-    let dist = (Math.abs(col)+ Math.abs(row)+Math.abs(s))/2;
-    console.log(dist)
+  cubeDistance(hexA, hexB) {
+    const { col, row, s } = this.cubeSubtract(hexA, hexB);
+    let dist = (Math.abs(col) + Math.abs(row) + Math.abs(s)) /2;
+    console.log(dist);
     return dist;
   }
 
-  cubeLinearInt(hexA, hexB, t){
-    return this.Hex(this.linearInt(hexA.col, hexB.col, t), this.linearInt(hexA.row, hexB.row, t), this.linearInt(hexA.s,hexB.s,t))
+  cubeLinearInt(hexA, hexB, t) {
+    return this.Hex(
+      this.linearInt(hexA.col, hexB.col, t),
+      this.linearInt(hexA.row, hexB.row, t),
+      this.linearInt(hexA.s, hexB.s, t)
+    );
   }
 
   cubeRound(cube) {
@@ -283,21 +297,28 @@ class Canvas extends Component {
     return this.Hex(rx, ry, rz);
   }
 
-  cubeDirection(direction){
-    const cubeDirections = [this.Hex(1,0,-1), this.Hex(1,-1,0),this.Hex(0,-1,1), this.Hex(-1,0,1), this.Hex(-1,1,0), this.Hex(0,1,-1)];
+  cubeDirection(direction) {
+    const cubeDirections = [
+      this.Hex(1, 0, -1),
+      this.Hex(1, -1, 0),
+      this.Hex(0, -1, 1),
+      this.Hex(-1, 0, 1),
+      this.Hex(-1, 1, 0),
+      this.Hex(0, 1, -1)
+    ];
     return cubeDirections[direction];
   }
 
-  cubeAdd(a, b){
-    return this.Hex(a.col+b.col, a.row+b.row, a.s + b.s );
-  }
-  
-  cubeSubtract(hexA, hexB) {
-    return this.Hex(hexA.col-hexB.col, hexA.row-hexB.row, hexA.s-hexB.s);
+  cubeAdd(a, b) {
+    return this.Hex(a.col + b.col, a.row + b.row, a.s + b.s);
   }
 
-  getCubeNeighbor(h,direction){
-    return this.cubeAdd(h, this.cubeDirection(direction))
+  cubeSubtract(hexA, hexB) {
+    return this.Hex(hexA.col - hexB.col, hexA.row - hexB.row, hexA.s - hexB.s);
+  }
+
+  getCubeNeighbor(h, direction) {
+    return this.cubeAdd(h, this.cubeDirection(direction));
   }
 
   render() {
