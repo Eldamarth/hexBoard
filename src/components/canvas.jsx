@@ -282,13 +282,13 @@ class Canvas extends Component {
     let ry = Math.round(cube.row);
     let rz = Math.round(cube.s);
 
-    let x_diff = Math.abs(rx - cube.x);
-    let y_diff = Math.abs(ry - cube.y);
-    let z_diff = Math.abs(rz - cube.z);
+    let xDiff = Math.abs(rx - cube.x);
+    let yDiff = Math.abs(ry - cube.y);
+    let zDiff = Math.abs(rz - cube.s);
 
-    if (x_diff > y_diff && x_diff > z_diff) {
+    if (xDiff > yDiff && xDiff > zDiff) {
       rx = -ry - rz;
-    } else if (y_diff > z_diff) {
+    } else if (yDiff > zDiff) {
       ry = -rx - rz;
     } else {
       rz = -rx - ry;
