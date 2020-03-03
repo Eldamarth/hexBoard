@@ -44,8 +44,9 @@ class Canvas extends Component {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       // this.drawNeighbors(this.Hex(col, row, s));
       let currentDistanceLine = nextState.currentDistanceLine;
+      // console.log(currentDistanceLine)
       for (let i = 0; i <= currentDistanceLine.length-1 ; i++) {
-        this.drawHex(this.canvasCoordinates,this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y, "lime", 2))
+        this.drawHex(this.canvasCoordinates,this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y), "lime", 2)
       }
       this.drawHex(this.canvasCoordinates, this.Point(x,y), "lime", 2)
       return true;
@@ -212,6 +213,8 @@ class Canvas extends Component {
   }
 
   handleMouseMove(e) {
+    const { canvasWidth, canvasHeight } = this.state.canvasSize;
+    const { hexWidth, hexHeight, vertDist, horDist } = this.state.hexParameters;
     const { left, right, top, bottom } = this.state.canvasPosition;
     let offsetX = e.pageX - left;
     let offsetY = e.pageY - top;
@@ -220,10 +223,17 @@ class Canvas extends Component {
     );
     const { x, y } = this.hexToPix(this.Hex(col, row, s));
     this.getDistanceLine(this.Hex(0,0,0), this.Hex(col,row,s))
-    console.log(this.state.currentDistanceLine)
-    this.setState({
+    if (
+      x > hexWidth / 2 &&
+      x < canvasWidth - hexWidth / 2 &&
+      y > hexHeight / 2 &&
+      y < canvasHeight - hexHeight / 2
+    ) {
+        this.setState({
       currentHex: {col, row, s, x, y}
     })
+    }
+  
   }
 
   linearInt(a,b,t){
@@ -232,19 +242,21 @@ class Canvas extends Component {
 
   getDistanceLine(hexA, hexB){
     let dist = this.cubeDistance(hexA, hexB);
-    let arr =[];
+    var arr =[];
     for (let i = 0; i <= dist; i++) {
-      let center = this.hexToPix(this.cubeRound(this.cubeLinearInt(hexA, hexB, 1/dist*i)));
-      arr = [].concat(arr,center);
+      let center = this.hexToPix(this.cubeRound(this.cubeLinearInt(hexA, hexB, 1.0/dist*i)));
+      arr = arr.concat(center);
     }
     this.setState({
-      currentDistanceLine:arr,
+      currentDistanceLine:arr
     })
   }
 
   cubeDistance(hexA,hexB){
     const {col, row, s} = this.cubeSubtract(hexA, hexB);
-    return(Math.abs(col), Math.abs(row),Math.abs(s))/2;
+    let dist = (Math.abs(col)+ Math.abs(row)+Math.abs(s))/2;
+    console.log(dist)
+    return dist;
   }
 
   cubeLinearInt(hexA, hexB, t){
