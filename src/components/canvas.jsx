@@ -42,7 +42,11 @@ class Canvas extends Component {
       const {canvasWidth, canvasHeight} = this.state.canvasSize;
       const ctx = this.canvasCoordinates.getContext("2d");
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      this.drawNeighbors(this.Hex(col, row, s));
+      // this.drawNeighbors(this.Hex(col, row, s));
+      let currentDistanceLine = nextState.currentDistanceLine;
+      for (let i = 0; i <= currentDistanceLine.length-1 ; i++) {
+        this.drawHex(this.canvasCoordinates,this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y, "lime", 2))
+      }
       this.drawHex(this.canvasCoordinates, this.Point(x,y), "lime", 2)
       return true;
     }
@@ -215,14 +219,38 @@ class Canvas extends Component {
       this.pixToHex(this.Point(offsetX, offsetY))
     );
     const { x, y } = this.hexToPix(this.Hex(col, row, s));
-
-    // this.drawHex(this.canvasCoordinates, this.Point(x, y), "green", 2);
+    this.getDistanceLine(this.Hex(0,0,0), this.Hex(col,row,s))
+    console.log(this.state.currentDistanceLine)
     this.setState({
       currentHex: {col, row, s, x, y}
     })
   }
 
-  // VIDEO 4 - 16:48
+  linearInt(a,b,t){
+    return (a+(b-a)*t)
+  }
+
+  getDistanceLine(hexA, hexB){
+    let dist = this.cubeDistance(hexA, hexB);
+    let arr =[];
+    for (let i = 0; i <= dist; i++) {
+      let center = this.hexToPix(this.cubeRound(this.cubeLinearInt(hexA, hexB, 1/dist*i)));
+      arr = [].concat(arr,center);
+    }
+    this.setState({
+      currentDistanceLine:arr,
+    })
+  }
+
+  cubeDistance(hexA,hexB){
+    const {col, row, s} = this.cubeSubtract(hexA, hexB);
+    return(Math.abs(col), Math.abs(row),Math.abs(s))/2;
+  }
+
+  cubeLinearInt(hexA, hexB, t){
+    return this.Hex(this.linearInt(hexA.col, hexB.col, t), this.linearInt(hexA.row, hexB.row, t), this.linearInt(hexA.s,hexB.s,t))
+  }
+
   cubeRound(cube) {
     let rx = Math.round(cube.col);
     let ry = Math.round(cube.row);
@@ -250,6 +278,10 @@ class Canvas extends Component {
 
   cubeAdd(a, b){
     return this.Hex(a.col+b.col, a.row+b.row, a.s + b.s );
+  }
+  
+  cubeSubtract(hexA, hexB) {
+    return this.Hex(hexA.col-hexB.col, hexA.row-hexB.row, hexA.s-hexB.s);
   }
 
   getCubeNeighbor(h,direction){
