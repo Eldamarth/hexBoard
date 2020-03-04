@@ -6,12 +6,15 @@ class Canvas extends Component {
     super(props);
 
     this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleClick = this.handleClick.bind(this)
     this.state = {
       hexSize: 20,
       hexOrigin: {
         x: 400,
         y: 300
-      }
+      },
+      playerPosition: {col:0,row:0,s:0,x:0,y:0},
+      currentHex: {col:0,row:0,s:0,x:0,y:0}
     };
   }
 
@@ -45,15 +48,28 @@ class Canvas extends Component {
       // this.drawNeighbors(this.Hex(col, row, s));
       let currentDistanceLine = nextState.currentDistanceLine;
       // console.log(currentDistanceLine)
-      for (let i = 0; i <= currentDistanceLine.length - 1; i++) {
-        this.drawHex(
+      for (let i = 0; i <= currentDistanceLine.length - 2; i++) {
+        if(i===0){
+          this.drawHex(
+            this.canvasCoordinates,
+            this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y),
+            "black",
+            1,
+            "red"
+          );
+        } else{
+           this.drawHex(
           this.canvasCoordinates,
           this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y),
-          "lime",
-          2
+          "black",
+          1,
+          "grey"
         );
+        }
+
+       
       }
-      this.drawHex(this.canvasCoordinates, this.Point(x, y), "lime", 2);
+      this.drawHex(this.canvasCoordinates, this.Point(x, y), "black", 1,"grey");
       return true;
     }
     return false;
@@ -70,6 +86,8 @@ class Canvas extends Component {
     let rTopSide = Math.round(hexOrigin.y / vertDist);
     let rBottomSide = Math.round((canvasHeight - hexOrigin.y) / vertDist);
 
+
+    //  BOTTOM HALF OF CANVAS
     let posSpacer = 0;
     for (let row = 0; row <= rBottomSide; row++) {
       if (row % 2 === 0 && row !== 0) {
@@ -84,15 +102,17 @@ class Canvas extends Component {
           y > hexHeight / 2 &&
           y < canvasHeight - hexHeight / 2
         ) {
-          this.drawHex(this.canvasHex, this.Point(x, y), "grey");
-          this.drawHexCoordinates(
-            this.canvasHex,
-            this.Point(x, y),
-            this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
-          );
+          this.drawHex(this.canvasHex, this.Point(x, y), "black",1, "grey");
+          // this.drawHexCoordinates(
+          //   this.canvasHex,
+          //   this.Point(x, y),
+          //   this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
+          // );
         }
       }
     }
+
+    // TOP HALF OF CANVAS
     let negSpacer = 0;
     for (let row = -1; row >= -rTopSide; row--) {
       if (row % 2 !== 0) {
@@ -107,26 +127,27 @@ class Canvas extends Component {
           y > hexHeight / 2 &&
           y < canvasHeight - hexHeight / 2
         ) {
-          this.drawHex(this.canvasHex, this.Point(x, y), "grey");
-          this.drawHexCoordinates(
-            this.canvasHex,
-            this.Point(x, y),
-            this.Hex(col + negSpacer, row, -(col + negSpacer) - row)
-          );
+          this.drawHex(this.canvasHex, this.Point(x, y), "black",1, "grey");
+          // this.drawHexCoordinates(
+          //   this.canvasHex,
+          //   this.Point(x, y),
+          //   this.Hex(col + negSpacer, row, -(col + negSpacer) - row)
+          // );
         }
       }
     }
   }
 
-  drawHex(canvasID, center, color, width) {
+  drawHex(canvasID, center, lineColor, width, fillColor) {
     for (let i = 0; i <= 5; i++) {
       let start = this.getHexCornerCoord(center, i);
       let end = this.getHexCornerCoord(center, i + 1);
+      this.fillHex(canvasID,center,fillColor);
       this.drawLine(
         canvasID,
-        { x: start.x, y: start.y },
-        { x: end.x, y: end.y },
-        color,
+        start,
+        end,
+        lineColor,
         width
       );
     }
@@ -191,6 +212,30 @@ class Canvas extends Component {
     return { col: c, row: r, s: s };
   }
 
+  fillHex(canvasID, center, fillColor){
+    let c0 = this.getHexCornerCoord(center, 0);
+    let c1 = this.getHexCornerCoord(center, 1);
+    let c2 = this.getHexCornerCoord(center, 2);
+    let c3 = this.getHexCornerCoord(center, 3);
+    let c4 = this.getHexCornerCoord(center, 4);
+    let c5 = this.getHexCornerCoord(center, 5);
+    const ctx = canvasID.getContext("2d");
+    ctx.beginPath();
+    ctx.fillStyle = fillColor;
+    ctx.globalAlpha = 0.1;
+    ctx.moveTo(c0.x, c0.y);
+    ctx.lineTo(c1.x,c1.y);
+    ctx.lineTo(c2.x,c2.y);
+    ctx.lineTo(c3.x,c3.y);
+    ctx.lineTo(c4.x,c4.y);
+    ctx.lineTo(c5.x,c5.y);
+    ctx.closePath();
+    ctx.fill();
+    
+
+
+  }
+
   drawLine(canvasID, start, end, color, width) {
     const ctx = canvasID.getContext("2d");
     ctx.beginPath();
@@ -230,7 +275,8 @@ class Canvas extends Component {
       this.pixToHex(this.Point(offsetX, offsetY))
     );
     const { x, y } = this.hexToPix(this.Hex(col, row, s));
-    this.getDistanceLine(this.Hex(0, 0, 0), this.Hex(col, row, s));
+    let {playerPosition} = this.state;
+    this.getDistanceLine(this.Hex(playerPosition.col, playerPosition.row, playerPosition.s), this.Hex(col, row, s));
     if (
       x > hexWidth / 2 &&
       x < canvasWidth - hexWidth / 2 &&
@@ -241,6 +287,12 @@ class Canvas extends Component {
         currentHex: { col, row, s, x, y }
       });
     }
+  }
+
+  handleClick(){
+    this.setState({
+      playerPosition: this.state.currentHex,
+    })
   }
 
   linearInt(a, b, t) {
@@ -330,6 +382,7 @@ class Canvas extends Component {
             (this.canvasCoordinates = canvasCoordinates)
           }
           onMouseMove={this.handleMouseMove}
+          onClick={this.handleClick}
         ></canvas>
       </div>
     );
