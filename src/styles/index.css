@@ -12,7 +12,11 @@ code {
     monospace;
 }
 canvas{
-  border:1px solid;
+  /* border:1px solid; */
   position: absolute;
   left:0;
+}
+.expandButton{
+  position: absolute;
+  left:810px;
 }
