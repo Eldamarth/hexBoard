@@ -2,29 +2,29 @@ import React, { Component } from "react";
 import "../styles/index.css";
 
 const DUMMY_OBSTACLES = [
-  '{"col": 4, "row": -2, "s": 2}',
-  '{"col": 4, "row": -1, "s": -3}',
-  '{"col": 4, "row": 0, "s": 4}',
-  '{"col": 7, "row": -9, "s": 2}',
-  '{"col": 8, "row": -9, "s": 1}',
-  '{"col": 9, "row": -9, "s": 0}',
-  '{"col": 10, "row": -9, "s": -1}',
-  '{"col": -5, "row": 7, "s": -2}',
-  '{"col": -5, "row": 6, "s": -1}',
-  '{"col": -4, "row": 4, "s": 0}',
-  '{"col": -13, "row": 5, "s": 8}',
-  '{"col": -14, "row": 6, "s": 8}',
-  '{"col": -14, "row": 7, "s": 7}',
-  '{"col": -15, "row": 8, "s": 7}',
-  '{"col": -15, "row": 9, "s": 6}',
-  '{"col": -9, "row": -4, "s": 13}',
-  '{"col": -8, "row": -5, "s": 13}',
-  '{"col": -8, "row": -6, "s": 14}',
-  '{"col": -7, "row": -6, "s": 14}',
-  '{"col": -5, "row": -5, "s": 10}',
-  '{"col": -6, "row": -4, "s": 10}',
-  '{"col": -7, "row": -4, "s": 11}',
-  '{"col": -6, "row": -2, "s": 8}'
+  '{"col":4,"row":-2,"s":2}',
+'{"col":4,"row":-1,"s":-3}',
+'{"col":4,"row":0,"s":4}',
+'{"col":7,"row":-9,"s":2}',
+'{"col":8,"row":-9,"s":1}',
+'{"col":9,"row":-9,"s":0}',
+'{"col":10,"row":-9,"s":-1}',
+'{"col":-5,"row":7,"s":-2}',
+'{"col":-5,"row":6,"s":-1}',
+'{"col":-4,"row":4,"s":0}',
+'{"col":-13,"row":5,"s":8}',
+'{"col":-14,"row":6,"s":8}',
+'{"col":-14,"row":7,"s":7}',
+'{"col":-15,"row":8,"s":7}',
+'{"col":-15,"row":9,"s":6}',
+'{"col":-9,"row":-4,"s":13}',
+'{"col":-8,"row":-5,"s":13}',
+'{"col":-8,"row":-6,"s":14}',
+'{"col":-7,"row":-6,"s":14}',
+'{"col":-5,"row":-5,"s":10}',
+'{"col":-6,"row":-4,"s":10}',
+'{"col":-7,"row":-4,"s":11}',
+'{"col":-6,"row":-2,"s":8}'
 ];
 
 class Canvas extends Component {
@@ -34,7 +34,7 @@ class Canvas extends Component {
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleClick = this.handleClick.bind(this);
     // this.handleClickPlayerMove = this.handleClickPlayerMove.bind(this);
-    // this.breadthFirstSearch = this.breadthFirstSearch.bind(this);
+    this.breadthFirstSearch = this.breadthFirstSearch.bind(this);
 
     this.state = {
       hexSize: 20,
@@ -91,51 +91,19 @@ class Canvas extends Component {
       const ctx = this.canvasInteraction.getContext("2d");
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       // this.drawNeighbors(this.Hex(col, row, s));
-      // let currentDistanceLine = nextState.currentDistanceLine;
-      // for (let i = 0; i <= currentDistanceLine.length - 2; i++) {
-      //   if (i === 0) {
-      //     this.drawHex(
-      //       this.canvasInteraction,
-      //       this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y),
-      //       1,
-      //       "black",
-      //       "red"
-      //     );
-      //   } else {
-      //     this.drawHex(
-      //       this.canvasInteraction,
-      //       this.Point(currentDistanceLine[i].x, currentDistanceLine[i].y),
-      //       1,
-      //       "black",
-      //       "grey"
-      //     );
-      //   }
-      // }
-      //  OBSTACLE MAP FOR OBSTACLE CREATION THROUGH CLICKING
-      // nextState.obstacles.map(element => {
-      //   const { col, row, s } = JSON.parse(element);
-      //   const { x, y } = this.hexToPix(this.Hex(col, row, s));
-      //   this.drawHex(
-      //     this.canvasInteraction,
-      //     this.Point(x, y),
-      //     1,
-      //     "black",
-      //     "black"
-      //   );
-      // });
-      // this.drawHex(
-      //   this.canvasInteraction,
-      //   this.Point(x, y),
-      //   1,
-      //   "black",
-      //   "grey"
-      // );
-
       this.drawPath();
+      this.drawHex(
+        this.canvasInteraction,
+        this.Point(x, y),
+        1,
+        "black",
+        "grey"
+      );
+      console.log(nextState.currentHex)
       return true;
     }
 
-    if (nextState.cameFrom !== this.state.cameFrom) {
+    if (nextState.cameFrom != this.state.cameFrom) {
       const { canvasWidth, canvasHeight } = this.state.canvasSize;
       const ctx = this.canvasView.getContext("2d");
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -192,10 +160,8 @@ class Canvas extends Component {
           //   this.Point(x, y),
           //   this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
           // );
-          var bottomH = JSON.stringify(
-            this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
-          );
-          console.log(bottomH)
+          var bottomH = JSON.stringify(this.Hex(col - posSpacer, row, -(col - posSpacer) - row));
+          console.log(this.state.obstacles.includes(bottomH))
           if (!this.state.obstacles.includes(bottomH)) {
           
             hexPathMap.push(bottomH);
@@ -250,7 +216,6 @@ class Canvas extends Component {
     }
   }
 
-  // Heavily modified version of redblobgames.com's hex library pointy_hex_corner function
   getHexCornerCoord(center, i) {
     let angle_deg = 60 * i + 30;
     let angle_rad = (Math.PI / 180) * angle_deg;
