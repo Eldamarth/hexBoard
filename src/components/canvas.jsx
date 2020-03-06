@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import "../styles/index.css";
 
 const DUMMY_OBSTACLES = [
-  '{"col":4,"row":-2,"s":2}',
+  '{"col":4,"row":-2,"s":-2}',
 '{"col":4,"row":-1,"s":-3}',
-'{"col":4,"row":0,"s":4}',
+'{"col":4,"row":0,"s":-4}',
 '{"col":7,"row":-9,"s":2}',
 '{"col":8,"row":-9,"s":1}',
 '{"col":9,"row":-9,"s":0}',
@@ -20,7 +20,7 @@ const DUMMY_OBSTACLES = [
 '{"col":-9,"row":-4,"s":13}',
 '{"col":-8,"row":-5,"s":13}',
 '{"col":-8,"row":-6,"s":14}',
-'{"col":-7,"row":-6,"s":14}',
+'{"col":-7,"row":-6,"s":13}',
 '{"col":-5,"row":-5,"s":10}',
 '{"col":-6,"row":-4,"s":10}',
 '{"col":-7,"row":-4,"s":11}',
@@ -92,14 +92,7 @@ class Canvas extends Component {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       // this.drawNeighbors(this.Hex(col, row, s));
       this.drawPath();
-      this.drawHex(
-        this.canvasInteraction,
-        this.Point(x, y),
-        1,
-        "black",
-        "grey"
-      );
-      console.log(nextState.currentHex)
+
       return true;
     }
 
@@ -118,6 +111,10 @@ class Canvas extends Component {
           "green",
           0.1
         );
+
+        var from = JSON.parse(nextState.cameFrom[element])
+        var fromCoord = this.hexToPix(this.Hex(from.col, from.row));
+        this.drawArrow(fromCoord.x, fromCoord.y,x,y);
       }
       return true;
     }
@@ -383,10 +380,41 @@ class Canvas extends Component {
       this.drawHex(this.canvasInteraction, this.Point(x,y), 1, "black", 'red');
     }
   }
+  drawArrow(fromx, fromy,tox,toy){
+    var ctx = this.canvasView.getContext('2d');
+    var headlen = 5;
+    var angle = Math.atan2(toy-fromy, tox-fromx);
+    ctx.beginPath();
+    ctx.moveTo(fromx, fromy);
+    ctx.lineTo(tox,toy);
+    ctx.strokeStyle = "#cc0000";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tox, toy);
+    ctx.globalAlpha = 0.3;
+    ctx.lineTo(tox-headlen*Math.cos(angle-Math.PI/7), toy-headlen*Math.sin(angle-Math.PI/7));
+    ctx.lineTo(tox-headlen*Math.cos(angle+Math.PI/7), toy-headlen*Math.sin(angle+Math.PI/7));
+    ctx.lineTo(tox,toy);
+    ctx.lineTo(tox-headlen*Math.cos(angle-Math.PI/7), toy-headlen*Math.sin(angle-Math.PI/7));
+    ctx.strokeStyle = "#cc0000";
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    ctx.fillStyle = "#cc0000";
+    ctx.fill();
+  }
+
 
 
   handleClick() {
-    // this.addObstacles();
+    const {cameFrom, currentHex} = this.state;
+    const {col, row, s} = currentHex;
+    if (cameFrom[JSON.stringify(this.Hex(col,row,s))]){
+      this.setState(
+        {playerPosition:this.Hex(col,row,s)},
+        this.breadthFirstSearchCallback = () => this.breadthFirstSearch(this.state.playerPosition)
+      )
+    }
   }
 
   drawObstacles() {
