@@ -346,14 +346,14 @@ class Canvas extends Component {
     }
   }
 
-  handleClickPlayerMove() {
-    this.setState({
-      playerPosition: this.state.currentHex
-    });
-  }
+  // handleClickPlayerMove() {
+  //   this.setState({
+  //     playerPosition: this.state.currentHex
+  //   });
+  // }
 
 
-  //  PICK UP HERE - VIDEO #10 - 12:21
+
   getPath(start, current){
     const {cameFrom } = this.state;
     start = JSON.stringify(start);
@@ -410,12 +410,34 @@ class Canvas extends Component {
     const {cameFrom, currentHex} = this.state;
     const {col, row, s} = currentHex;
     if (cameFrom[JSON.stringify(this.Hex(col,row,s))]){
-      this.setState(
-        {playerPosition:this.Hex(col,row,s)},
-        this.breadthFirstSearchCallback = () => this.breadthFirstSearch(this.state.playerPosition)
-      )
+      let {path} = this.state;
+      this.intervalId = setInterval(this.startMoving.bind(this,path),100);
+
+      
+      
+ 
     }
   }
+// PICK UP IN THIS FUNCTION
+// VIDEO 11, 4:19
+
+startMoving(path) {
+  if( path.length === 0){
+    clearInterval(this.intervalId);
+  } else {
+    const {canvasWidth, canvasHeight} = this.state.canvasSize;
+    const ctx = this.canvasInteraction.getContext('2d');
+    ctx.clearRect(0,0,canvasWidth,canvasHeight);
+    let current = path.pop();
+    const {col, row, s} = JSON.parse(current);
+    const {x,y} = this.hexToPix(this.Hex(col,row,s));
+    this.drawHex(this.canvasInteraction, this.Point(x,y), 1, "black", "yellow");
+    this.setState(
+      {playerPosition:this.Hex(col,row,s)},
+      this.breadthFirstSearchCallback = () => this.breadthFirstSearch(this.state.playerPosition)
+    )
+  }
+}
 
   drawObstacles() {
     // CODE FOR DRAWING FROM PREPARED ARRAY LIST OF OBSTACLES
