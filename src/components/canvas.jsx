@@ -151,7 +151,7 @@ class Canvas extends Component {
         y: 300
       },
       playerPosition: { col: 0, row: 0, s: 0 },
-      currentHex: { col: 0, row: 0, s: 0},
+      currentHex: { col: 0, row: 0, s: 0 },
       obstacles: DUMMY_OBSTACLES,
       cameFrom: {},
       hexPathMap: [],
@@ -172,7 +172,7 @@ class Canvas extends Component {
 
   componentDidMount() {
     const { canvasHeight, canvasWidth } = this.state.canvasSize;
-  
+
     this.canvasHex.width = canvasWidth;
     this.canvasHex.height = canvasHeight;
     this.canvasInteraction.width = canvasWidth;
@@ -182,10 +182,10 @@ class Canvas extends Component {
     this.getCanvasPosition(this.canvasInteraction);
     this.drawHex(
       this.canvasInteraction,
-      this.Point(this.state.playerPosition.x, this.state.playerPosition.y),
+      this.hexToPix(this.state.playerPosition),
       1,
       "grey",
-      "red",
+      "yellow",
       0.2
     );
     this.drawHexes();
@@ -193,16 +193,16 @@ class Canvas extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    if (nextState.currentHex !== this.state.currentHex) {
-      const { col, row, s, x, y } = nextState.currentHex;
-      const { canvasWidth, canvasHeight } = this.state.canvasSize;
-      const ctx = this.canvasInteraction.getContext("2d");
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      // this.drawNeighbors(this.Hex(col, row, s));
-      this.drawPath();
+    // if (nextState.currentHex !== this.state.currentHex) {
+    //   const { col, row, s, x, y } = nextState.currentHex;
+    //   const { canvasWidth, canvasHeight } = this.state.canvasSize;
+    //   const ctx = this.canvasInteraction.getContext("2d");
+    //   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    //   // this.drawNeighbors(this.Hex(col, row, s));
+    //   this.drawPath();
 
-      return true;
-    }
+    //   return true;
+    // }
 
     if (nextState.cameFrom != this.state.cameFrom) {
       const { canvasWidth, canvasHeight } = this.state.canvasSize;
@@ -220,9 +220,9 @@ class Canvas extends Component {
           0.1
         );
 
-        var from = JSON.parse(nextState.cameFrom[element])
+        var from = JSON.parse(nextState.cameFrom[element]);
         var fromCoord = this.hexToPix(this.Hex(from.col, from.row));
-        this.drawArrow(fromCoord.x, fromCoord.y,x,y);
+        this.drawArrow(fromCoord.x, fromCoord.y, x, y);
       }
       return true;
     }
@@ -231,12 +231,7 @@ class Canvas extends Component {
 
   drawHexes() {
     const { canvasWidth, canvasHeight } = this.state.canvasSize;
-    const {
-      hexWidth,
-      hexHeight,
-      vertDist,
-      horDist,
-    } = this.state.hexParameters;
+    const { hexWidth, hexHeight, vertDist, horDist } = this.state.hexParameters;
     const hexOrigin = this.state.hexOrigin;
     // column margins
     let cLeftSide = Math.round(hexOrigin.x / horDist) * 4;
@@ -256,8 +251,9 @@ class Canvas extends Component {
         const { x, y } = this.hexToPix(this.Hex(col - posSpacer, row));
 
         if (
-          (x > hexWidth / 2 && x < canvasWidth - hexWidth / 2) &&
-          (y > hexHeight / 2 && y < canvasHeight - hexHeight / 2)
+          x > hexWidth / 2 &&
+          x < canvasWidth - hexWidth / 2 &&
+          y > hexHeight / 2 && y < canvasHeight - hexHeight / 2
         ) {
           this.drawHex(this.canvasHex, this.Point(x, y), 1, "black", "grey");
           // this.drawHexCoordinates(
@@ -265,10 +261,11 @@ class Canvas extends Component {
           //   this.Point(x, y),
           //   this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
           // );
-          var bottomH = JSON.stringify(this.Hex(col - posSpacer, row, -(col - posSpacer) - row));
-          console.log(this.state.obstacles.includes(bottomH))
+          var bottomH = JSON.stringify(
+            this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
+          );
+          console.log(this.state.obstacles.includes(bottomH));
           if (!this.state.obstacles.includes(bottomH)) {
-          
             hexPathMap.push(bottomH);
           }
         }
@@ -284,8 +281,9 @@ class Canvas extends Component {
         const { x, y } = this.hexToPix(this.Hex(col + negSpacer, row));
 
         if (
-          (x > hexWidth / 2 && x < canvasWidth - hexWidth / 2) &&
-          (y > hexHeight / 2 && y < canvasHeight - hexHeight / 2)
+          x > hexWidth / 2 &&
+          x < canvasWidth - hexWidth / 2 &&
+          y > hexHeight / 2 && y < canvasHeight - hexHeight / 2
         ) {
           this.drawHex(this.canvasHex, this.Point(x, y), 1, "black", "grey");
           // this.drawHexCoordinates(
@@ -307,8 +305,8 @@ class Canvas extends Component {
       {
         hexPathMap: hexPathMap
       },
-      this.breadthFirstSearchCallback = () =>
-        this.breadthFirstSearch(this.state.playerPosition)
+      (this.breadthFirstSearchCallback = () =>
+        this.breadthFirstSearch(this.state.playerPosition))
     );
   }
 
@@ -389,7 +387,7 @@ class Canvas extends Component {
     const ctx = canvasID.getContext("2d");
     ctx.beginPath();
     ctx.fillStyle = fillColor;
-    ctx.globalAlpha = 0.1;
+    ctx.globalAlpha = 0.2;
     ctx.moveTo(c0.x, c0.y);
     ctx.lineTo(c1.x, c1.y);
     ctx.lineTo(c2.x, c2.y);
@@ -439,14 +437,16 @@ class Canvas extends Component {
       this.pixToHex(this.Point(offsetX, offsetY))
     );
     const { x, y } = this.hexToPix(this.Hex(col, row, s));
-    let playerPosition  = this.state.playerPosition;
+    let playerPosition = this.state.playerPosition;
     // this.getDistanceLine(this.Hex(0, 0, 0), this.Hex(col, row, s));
-    this.getPath(this.Hex(playerPosition.col, playerPosition.row, playerPosition.s), this.Hex(col,row,s))
+    this.getPath(
+      this.Hex(playerPosition.col, playerPosition.row, playerPosition.s),
+      this.Hex(col, row, s)
+    );
     if (
-      (x > hexWidth / 2 &&
-      x < canvasWidth - hexWidth / 2) &&
-      (y > hexHeight / 2 &&
-      y < canvasHeight - hexHeight / 2)
+      x > hexWidth / 2 &&
+      x < canvasWidth - hexWidth / 2 &&
+      y > hexHeight / 2 && y < canvasHeight - hexHeight / 2
     ) {
       this.setState({
         currentHex: { col, row, s, x, y }
@@ -460,51 +460,57 @@ class Canvas extends Component {
   //   });
   // }
 
-
-
-  getPath(start, current){
-    const {cameFrom } = this.state;
+  getPath(start, current) {
+    const { cameFrom } = this.state;
     start = JSON.stringify(start);
     current = JSON.stringify(current);
-    if(cameFrom[current]!= undefined){
+    if (cameFrom[current] != undefined) {
       var path = [current];
-      while(current != start){
+      while (current != start) {
         current = cameFrom[current];
         path.push(current);
-      } 
+      }
       path = [].concat(path);
       this.setState({
-      path:path
-      })
+        path: path
+      });
     }
-   
   }
 
-  drawPath(){
+  drawPath() {
     let path = this.state.path;
-    for (let i = 0; i <= path.length-1; i++) {
-      const {col, row} = JSON.parse(path[i]);
-      const {x,y} = this.hexToPix(this.Hex(col,row))
-      this.drawHex(this.canvasInteraction, this.Point(x,y), 1, "black", 'red');
+    for (let i = 0; i <= path.length - 1; i++) {
+      const { col, row } = JSON.parse(path[i]);
+      const { x, y } = this.hexToPix(this.Hex(col, row));
+      this.drawHex(this.canvasInteraction, this.Point(x, y), 1, "black", "red");
     }
   }
-  drawArrow(fromx, fromy,tox,toy){
-    var ctx = this.canvasView.getContext('2d');
+  drawArrow(fromx, fromy, tox, toy) {
+    var ctx = this.canvasView.getContext("2d");
     var headlen = 5;
-    var angle = Math.atan2(toy-fromy, tox-fromx);
+    var angle = Math.atan2(toy - fromy, tox - fromx);
     ctx.beginPath();
     ctx.moveTo(fromx, fromy);
-    ctx.lineTo(tox,toy);
+    ctx.lineTo(tox, toy);
     ctx.strokeStyle = "#cc0000";
     ctx.lineWidth = 3;
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(tox, toy);
     ctx.globalAlpha = 0.3;
-    ctx.lineTo(tox-headlen*Math.cos(angle-Math.PI/7), toy-headlen*Math.sin(angle-Math.PI/7));
-    ctx.lineTo(tox-headlen*Math.cos(angle+Math.PI/7), toy-headlen*Math.sin(angle+Math.PI/7));
-    ctx.lineTo(tox,toy);
-    ctx.lineTo(tox-headlen*Math.cos(angle-Math.PI/7), toy-headlen*Math.sin(angle-Math.PI/7));
+    ctx.lineTo(
+      tox - headlen * Math.cos(angle - Math.PI / 7),
+      toy - headlen * Math.sin(angle - Math.PI / 7)
+    );
+    ctx.lineTo(
+      tox - headlen * Math.cos(angle + Math.PI / 7),
+      toy - headlen * Math.sin(angle + Math.PI / 7)
+    );
+    ctx.lineTo(tox, toy);
+    ctx.lineTo(
+      tox - headlen * Math.cos(angle - Math.PI / 7),
+      toy - headlen * Math.sin(angle - Math.PI / 7)
+    );
     ctx.strokeStyle = "#cc0000";
     ctx.lineWidth = 5;
     ctx.stroke();
@@ -512,44 +518,112 @@ class Canvas extends Component {
     ctx.fill();
   }
 
-
-
   handleClick() {
-    const {cameFrom, currentHex} = this.state;
-    const {col, row, s} = currentHex;
-    if (cameFrom[JSON.stringify(this.Hex(col,row,s))]){
-      let {path} = this.state;
-      this.intervalId = setInterval(this.startMoving.bind(this,path),100);
-
-      
-      
- 
+    const { cameFrom, currentHex } = this.state;
+    const { col, row, s } = currentHex;
+    clearInterval(this.intervalId);
+    if (cameFrom[JSON.stringify(this.Hex(col, row, s))]) {
+      let { path } = this.state;
+      path.pop();
+      this.intervalId = setInterval(this.startMoving.bind(this, path), 100);
     }
   }
-// PICK UP IN THIS FUNCTION
-// VIDEO 11, 4:19
 
-startMoving(path) {
-  if( path.length === 0){
-    clearInterval(this.intervalId);
-  } else {
-    const {canvasWidth, canvasHeight} = this.state.canvasSize;
-    const ctx = this.canvasInteraction.getContext('2d');
-    ctx.clearRect(0,0,canvasWidth,canvasHeight);
-    let current = path.pop();
-    const {col, row, s} = JSON.parse(current);
-    const {x,y} = this.hexToPix(this.Hex(col,row,s));
-    this.drawHex(this.canvasInteraction, this.Point(x,y), 1, "black", "yellow");
-    this.setState(
-      {playerPosition:this.Hex(col,row,s)},
-      this.breadthFirstSearchCallback = () => this.breadthFirstSearch(this.state.playerPosition)
-    )
+  startMoving(path) {
+    if (path.length === 0) {
+      clearInterval(this.intervalId);
+    } else {
+      const { canvasWidth, canvasHeight } = this.state.canvasSize;
+      const ctx = this.canvasInteraction.getContext("2d");
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      let current = path.pop();
+      const { col, row, s } = JSON.parse(current);
+      const { x, y } = this.hexToPix(this.Hex(col, row, s));
+      this.drawHex(
+        this.canvasInteraction,
+        this.Point(x, y),
+        1,
+        "black",
+        "yellow",
+        0.1
+      );
+      this.setState(
+        { playerPosition: this.Hex(col, row, s) },
+        (this.breadthFirstSearchCallback = () =>
+          this.breadthFirstSearch(this.state.playerPosition))
+      );
+    }
   }
-}
+
+  visibleField(){
+    const {playerPosition} = this.state;
+    let center = this.hexToPix(playerPosition);
+    for(let i = 0; i < 360; i++) {
+      let beam = this.getHexBeamsCoord(center, i, 800)
+      let lineStart = {x:503.92304845413264, y: 240}
+      let lineEnd = {x: 555.884572681199,y: 330}
+      this.drawLine(this.canvasInteraction, lineStart, lineEnd, 1, "red");
+      let intersect = this.lineIntersect(center.x,center.y, beam.x, beam.y, lineStart.x, lineStart.y,lineEnd.x,lineEnd.y);
+      if(intersect){
+         this.drawLine(this.canvasInteraction, center, intersect, 1, "yellow");
+      } else {
+        this.drawLine(this.canvasInteraction, center, beam, 1, "yellow");
+      }
+     
+    }
+
+  }
+
+
+  between(a, b, c) {  
+    let eps = 0.0000001;
+    return a-eps <= b && b <= c+eps;
+  }
+
+  lineIntersect(x1,y1,x2,y2, x3,y3,x4,y4) {
+      var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4)) /
+              ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+      var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4)) /
+              ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+      if (isNaN(x)||isNaN(y)) {
+          return false;
+      } else {
+          if (x1>=x2) {
+              if (!this.between(x2, x, x1)) {return false;}
+          } else {
+              if (!this.between(x1, x, x2)) {return false;}
+          }
+          if (y1>=y2) {
+              if (!this.between(y2, y, y1)) {return false;}
+          } else {
+              if (!this.between(y1, y, y2)) {return false;}
+          }
+          if (x3>=x4) {
+              if (!this.between(x4, x, x3)) {return false;}
+          } else {
+              if (!this.between(x3, x, x4)) {return false;}
+          }
+          if (y3>=y4) {
+              if (!this.between(y4, y, y3)) {return false;}
+          } else {
+              if (!this.between(y3, y, y4)) {return false;}
+          }
+      }
+      return {x: x, y: y};
+  }
+
+
+  getHexBeamsCoord(center,i,range){
+    let angle_deg = 1 * i + 30;
+    let angle_rad = (Math.PI / 180) * angle_deg;
+    let x = center.x + range * Math.cos(angle_rad);
+    let y = center.y + range * Math.sin(angle_rad);
+    return this.Point(x, y);
+  }
 
   drawObstacles() {
     // CODE FOR DRAWING FROM PREPARED ARRAY LIST OF OBSTACLES
-    this.state.obstacles.map((element) => {
+    this.state.obstacles.map(element => {
       const { col, row, s } = JSON.parse(element);
       const { x, y } = this.hexToPix(this.Hex(col, row, s));
       this.drawHex(this.canvasHex, this.Point(x, y), 1, "black", "black");
@@ -686,7 +760,9 @@ startMoving(path) {
     cameFrom = Object.assign({}, cameFrom);
     this.setState({
       cameFrom: cameFrom
-    });
+    }, 
+    this.visibleFieldCallBack = () => this.visibleField()
+    );
   }
 
   render() {
