@@ -156,7 +156,8 @@ class Canvas extends Component {
       cameFrom: {},
       hexPathMap: [],
       path: [],
-      hexSides: []
+      hexSides: [],
+      nearestObstacles:[],
     };
   }
 
@@ -191,7 +192,6 @@ class Canvas extends Component {
     );
     this.drawHexes();
     this.drawObstacles();
-    this.getObstacleSides();
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -222,9 +222,9 @@ class Canvas extends Component {
           0.1
         );
 
-        var from = JSON.parse(nextState.cameFrom[element]);
-        var fromCoord = this.hexToPix(this.Hex(from.col, from.row));
-        this.drawArrow(fromCoord.x, fromCoord.y, x, y);
+        // var from = JSON.parse(nextState.cameFrom[element]);
+        // var fromCoord = this.hexToPix(this.Hex(from.col, from.row));
+        // this.drawArrow(fromCoord.x, fromCoord.y, x, y);
       }
       return true;
     }
@@ -605,9 +605,9 @@ class Canvas extends Component {
   }
 
   getObstacleSides() {
-    const { obstacles } = this.state;
+    const { obstacles, nearestObstacles } = this.state;
     let arr = [];
-    obstacles.map(obs => {
+    nearestObstacles.map(obs => {
       let hexCenter = this.hexToPix(JSON.parse(obs));
       for (let i = 0; i < 6; i++) {
         let start = this.getHexCornerCoord(hexCenter, i);
@@ -622,7 +622,7 @@ class Canvas extends Component {
       {
         hexSides: arr
       },
-      (this.visibleFieldCallBack = this.visibleField())
+      this.visibleFieldCallBack = () => this.visibleField()
     );
   }
 
@@ -808,8 +808,10 @@ class Canvas extends Component {
   }
 
   breadthFirstSearch(playerPosition) {
+    let {obstacles, hexPathMap} = this.state;
     var frontier = [playerPosition];
     var cameFrom = {};
+    var nearestObstacles = [];
     cameFrom[JSON.stringify(playerPosition)] = JSON.stringify(playerPosition);
 
     while (frontier.length != 0) {
@@ -818,17 +820,21 @@ class Canvas extends Component {
       arr.map(element => {
         if (
           !cameFrom.hasOwnProperty(JSON.stringify(element)) &&
-          this.state.hexPathMap.includes(JSON.stringify(element))
+          hexPathMap.includes(JSON.stringify(element))
         ) {
           frontier.push(element);
           cameFrom[JSON.stringify(element)] = JSON.stringify(current);
+        }
+        if (obstacles.includes(JSON.stringify(element))) {
+          nearestObstacles.push(JSON.stringify(element))
         }
       });
     }
     cameFrom = Object.assign({}, cameFrom);
     this.setState(
       {
-        cameFrom: cameFrom
+        cameFrom: cameFrom,
+        nearestObstacles: nearestObstacles,
       },
       (this.getObstacleSidesCallBack = () => this.getObstacleSides())
     );
