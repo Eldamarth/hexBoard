@@ -158,7 +158,7 @@ class Canvas extends Component {
       path: [],
       hexSides: [],
       nearestObstacles: [],
-      playerSight: 200,
+      playerSight: 200
     };
   }
 
@@ -184,6 +184,8 @@ class Canvas extends Component {
     this.canvasView.height = canvasHeight;
     this.canvasCoordinates.width = canvasWidth;
     this.canvasCoordinates.height = canvasHeight;
+    this.canvasFog.width = canvasWidth;
+    this.canvasFog.height = canvasHeight;
     this.getCanvasPosition(this.canvasInteraction);
     this.drawHex(
       this.canvasInteraction,
@@ -195,6 +197,7 @@ class Canvas extends Component {
     );
     this.drawHexes();
     this.drawObstacles();
+    this.addFog(this.canvasFog)
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -232,6 +235,15 @@ class Canvas extends Component {
       return true;
     }
     return false;
+  }
+
+  addFog(canvas){
+    const {canvasHeight, canvasWidth} = this.state.canvasSize;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0,canvasWidth, canvasHeight);
+    ctx.globalCompositeOperation = 'destination-out';
+
   }
 
   drawHexes() {
@@ -566,7 +578,7 @@ class Canvas extends Component {
   }
 
   visibleField() {
-    const { playerPosition, hexSides,playerSight } = this.state;
+    const { playerPosition, hexSides, playerSight } = this.state;
     let endPoints = [];
     for (let i = 0; i < hexSides.length; i++) {
       let side = JSON.parse(hexSides[i]);
@@ -575,7 +587,7 @@ class Canvas extends Component {
         { x: side.start.x, y: side.start.y },
         { x: side.end.x, y: side.end.y },
         1,
-        "orange"
+        "black"
       );
     }
     let center = this.hexToPix(playerPosition);
@@ -594,13 +606,16 @@ class Canvas extends Component {
           side.end.y
         );
         if (intersect) {
-          const distance = this.getDistance(center, intersect)
+          const distance = this.getDistance(center, intersect);
           if (distance < playerSight) {
             // this.drawLine(this.canvasInteraction, center, intersect, 1, "yellow");
-            endPoints.push(intersect)
+            endPoints.push(intersect);
           } else {
-            const t = playerSight/distance;
-            const point = this.Point((1-t)*center.x+t*intersect.x, (1-t)*center.y+t*intersect.y)
+            const t = playerSight / distance;
+            const point = this.Point(
+              (1 - t) * center.x + t * intersect.x,
+              (1 - t) * center.y + t * intersect.y
+            );
             // this.drawLine(this.canvasInteraction, center, point, 1, "yellow");
             endPoints.push(point);
           }
@@ -612,10 +627,33 @@ class Canvas extends Component {
       }
       // this.drawLine(this.canvasInteraction, lineStart, lineEnd, 1, "red");
     }
+    this.clearFog(endPoints);
+  }
 
-    for (let i = 0; i < endPoints.length-1; i++) {
-      this.drawLine(this.canvasInteraction, endPoints[i], endPoints[i===360?0:i+1], 1, "yellow");
+  // VIDEO STOP AT 15:49
+  clearFog(endPoints) {
+    const {playerPosition,playerSight} = this.state;
+    const center = this.hexToPix(playerPosition)
+    const ctxCanvasFog = this.canvasFog.getContext('2d');
+    ctxCanvasFog.beginPath();
+    const rGCanvasFog = ctxCanvasFog.createRadialGradient(center.x, center.y, playerSight-100, center.x, center.y, playerSight);
+    rGCanvasFog.addColorStop(0,"rgba(0, 0, 0, 1)");
+    rGCanvasFog.addColorStop(0.9,"rgba(0, 0, 0, 0.1)")
+    rGCanvasFog.addColorStop(1,"rgba(0, 0, 0, 0)")
+    ctxCanvasFog.fillStyle = rGCanvasFog;
+    ctxCanvasFog.moveTo(endPoints[0].x, endPoints[0].y);
+    for (let i = 0; i < endPoints.length; i++) {
+      ctxCanvasFog.lineTo(endPoints[i].x, endPoints[i].y)
+      this.drawLine(
+        this.canvasInteraction,
+        endPoints[i],
+        endPoints[i === 359 ? 0 : i + 1],
+        1,
+        "yellow"
+      );
     }
+    ctxCanvasFog.closePath();
+    ctxCanvasFog.fill();
   }
 
   getObstacleSides() {
@@ -884,6 +922,7 @@ class Canvas extends Component {
           {" "}
         </canvas>
         <canvas ref={canvasView => (this.canvasView = canvasView)}></canvas>
+        <canvas ref={canvasFog => this.canvasFog = canvasFog}></canvas>
         <canvas
           ref={canvasInteraction =>
             (this.canvasInteraction = canvasInteraction)
@@ -891,9 +930,9 @@ class Canvas extends Component {
           onMouseMove={this.handleMouseMove}
           onClick={this.handleClick}
         ></canvas>
-        <button className="expandButton" onClick={this.handleExpandClick}>
+        {/* <button className="expandButton" onClick={this.handleExpandClick}>
           Expand
-        </button>
+        </button> */}
       </div>
     );
   }
