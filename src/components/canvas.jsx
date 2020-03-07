@@ -186,6 +186,8 @@ class Canvas extends Component {
     this.canvasCoordinates.height = canvasHeight;
     this.canvasFog.width = canvasWidth;
     this.canvasFog.height = canvasHeight;
+    this.canvasFogHide.width = canvasWidth;
+    this.canvasFogHide.height = canvasHeight;
     this.getCanvasPosition(this.canvasInteraction);
     this.drawHex(
       this.canvasInteraction,
@@ -633,6 +635,7 @@ class Canvas extends Component {
   // VIDEO STOP AT 15:49
   clearFog(endPoints) {
     const {playerPosition,playerSight} = this.state;
+    const {canvasHeight, canvasWidth} = this.state.canvasSize;
     const center = this.hexToPix(playerPosition)
     const ctxCanvasFog = this.canvasFog.getContext('2d');
     ctxCanvasFog.beginPath();
@@ -642,8 +645,25 @@ class Canvas extends Component {
     rGCanvasFog.addColorStop(1,"rgba(0, 0, 0, 0)")
     ctxCanvasFog.fillStyle = rGCanvasFog;
     ctxCanvasFog.moveTo(endPoints[0].x, endPoints[0].y);
+
+    const ctxCanvasFogHide = this.canvasFogHide.getContext("2d");
+    ctxCanvasFogHide.globalCompositeOperation = "source-out";
+    ctxCanvasFogHide.clearRect(0,0,canvasWidth, canvasHeight);
+    ctxCanvasFogHide.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctxCanvasFogHide.fillRect(0,0,canvasWidth, canvasHeight);
+
+    ctxCanvasFogHide.beginPath();
+    const rGCanvasFogHide = ctxCanvasFogHide.createRadialGradient(center.x, center.y, playerSight-100, center.x, center.y, playerSight);
+    rGCanvasFogHide.addColorStop(0,"rgba(0, 0, 0, 1)");
+    rGCanvasFogHide.addColorStop(0.9,"rgba(0, 0, 0, 0.1)")
+    rGCanvasFogHide.addColorStop(1,"rgba(0, 0, 0, 0)")
+    ctxCanvasFogHide.globalCompositeOperation = "destination-out"
+    ctxCanvasFogHide.fillStyle = rGCanvasFogHide;
+    ctxCanvasFogHide.moveTo(endPoints[0].x, endPoints[0].y);
+
     for (let i = 0; i < endPoints.length; i++) {
       ctxCanvasFog.lineTo(endPoints[i].x, endPoints[i].y)
+      ctxCanvasFogHide.lineTo(endPoints[i].x, endPoints[i].y)
       this.drawLine(
         this.canvasInteraction,
         endPoints[i],
@@ -652,6 +672,9 @@ class Canvas extends Component {
         "yellow"
       );
     }
+    ctxCanvasFogHide.closePath();
+    ctxCanvasFogHide.fill();
+
     ctxCanvasFog.closePath();
     ctxCanvasFog.fill();
   }
@@ -923,6 +946,8 @@ class Canvas extends Component {
         </canvas>
         <canvas ref={canvasView => (this.canvasView = canvasView)}></canvas>
         <canvas ref={canvasFog => this.canvasFog = canvasFog}></canvas>
+        <canvas ref={canvasFogHide => this.canvasFogHide = canvasFogHide}></canvas>
+        
         <canvas
           ref={canvasInteraction =>
             (this.canvasInteraction = canvasInteraction)
