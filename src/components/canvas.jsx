@@ -181,6 +181,8 @@ class Canvas extends Component {
     this.canvasInteraction.height = canvasHeight;
     this.canvasView.width = canvasWidth;
     this.canvasView.height = canvasHeight;
+    this.canvasCoordinates.width = canvasWidth;
+    this.canvasCoordinates.height = canvasHeight;
     this.getCanvasPosition(this.canvasInteraction);
     this.drawHex(
       this.canvasInteraction,
@@ -222,8 +224,8 @@ class Canvas extends Component {
           0.1
         );
 
-        // var from = JSON.parse(nextState.cameFrom[element]);
-        // var fromCoord = this.hexToPix(this.Hex(from.col, from.row));
+        // let from = JSON.parse(nextState.cameFrom[element]);
+        // let fromCoord = this.hexToPix(this.Hex(from.col, from.row));
         // this.drawArrow(fromCoord.x, fromCoord.y, x, y);
       }
       return true;
@@ -259,12 +261,12 @@ class Canvas extends Component {
           y < canvasHeight - hexHeight / 2
         ) {
           this.drawHex(this.canvasHex, this.Point(x, y), 1, "black", "grey");
-          // this.drawHexCoordinates(
-          //   this.canvasHex,
-          //   this.Point(x, y),
-          //   this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
-          // );
-          var bottomH = JSON.stringify(
+          this.drawHexCoordinates(
+            this.canvasCoordinates,
+            this.Point(x, y),
+            this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
+          );
+          let bottomH = JSON.stringify(
             this.Hex(col - posSpacer, row, -(col - posSpacer) - row)
           );
           console.log(this.state.obstacles.includes(bottomH));
@@ -290,12 +292,12 @@ class Canvas extends Component {
           y < canvasHeight - hexHeight / 2
         ) {
           this.drawHex(this.canvasHex, this.Point(x, y), 1, "black", "grey");
-          // this.drawHexCoordinates(
-          //   this.canvasHex,
-          //   this.Point(x, y),
-          //   this.Hex(col + negSpacer, row, -(col + negSpacer) - row)
-          // );
-          var topH = JSON.stringify(
+          this.drawHexCoordinates(
+            this.canvasCoordinates,
+            this.Point(x, y),
+            this.Hex(col + negSpacer, row, -(col + negSpacer) - row)
+          );
+          let topH = JSON.stringify(
             this.Hex(col + negSpacer, row, -(col + negSpacer) - row)
           );
           if (!this.state.obstacles.includes(topH)) {
@@ -470,7 +472,7 @@ class Canvas extends Component {
     start = JSON.stringify(start);
     current = JSON.stringify(current);
     if (cameFrom[current] != undefined) {
-      var path = [current];
+      let path = [current];
       while (current != start) {
         current = cameFrom[current];
         path.push(current);
@@ -491,9 +493,9 @@ class Canvas extends Component {
     }
   }
   drawArrow(fromx, fromy, tox, toy) {
-    var ctx = this.canvasView.getContext("2d");
-    var headlen = 5;
-    var angle = Math.atan2(toy - fromy, tox - fromx);
+    let ctx = this.canvasView.getContext("2d");
+    let headlen = 5;
+    let angle = Math.atan2(toy - fromy, tox - fromx);
     ctx.beginPath();
     ctx.moveTo(fromx, fromy);
     ctx.lineTo(tox, toy);
@@ -605,17 +607,27 @@ class Canvas extends Component {
   }
 
   getObstacleSides() {
-    const { obstacles, nearestObstacles } = this.state;
+    const { nearestObstacles, playerPosition } = this.state;
+    const {col,row,s} = playerPosition;
+    const playerPositionCenter = this.hexToPix(this.Hex(col,row,s))
     let arr = [];
     nearestObstacles.map(obs => {
       let hexCenter = this.hexToPix(JSON.parse(obs));
+      let fromPlayerToHex = Math.floor(this.getDistance(playerPositionCenter, hexCenter));
       for (let i = 0; i < 6; i++) {
-        let start = this.getHexCornerCoord(hexCenter, i);
-        let end = this.getHexCornerCoord(hexCenter, i + 1);
-        let side = JSON.stringify({ start, end });
-        if (!arr.includes(side)) {
-          arr.push(side);
-        }
+        let neighbor = JSON.stringify(this.getCubeNeighbor(JSON.parse(obs), i))
+        if (!nearestObstacles.includes(neighbor)) {
+          let start = this.getHexCornerCoord(hexCenter, i);
+          let end = this.getHexCornerCoord(hexCenter, i + 1);
+          let center = {x:((start.x+end.x)/2),y:((start.y+end.y)/2)};
+          let fromPlayerToSide = Math.floor(this.getDistance(playerPositionCenter, center))
+          let side = JSON.stringify({ start, end });
+          if (fromPlayerToSide <= fromPlayerToHex && !arr.includes(side)) {
+            arr.push(side);
+          }else {
+          continue;
+          }
+        } 
       }
     });
     this.setState(
@@ -626,16 +638,20 @@ class Canvas extends Component {
     );
   }
 
+  getDistance(a, b){
+    return Math.hypot(a.x-b.x, a.y-b.y)
+  }
+
   between(a, b, c) {
     let eps = 0.0000001;
     return a - eps <= b && b <= c + eps;
   }
 
   lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
-    var x =
+    let x =
       ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) /
       ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    var y =
+    let y =
       ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) /
       ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
     if (isNaN(x) || isNaN(y)) {
@@ -725,7 +741,7 @@ class Canvas extends Component {
 
   getDistanceLine(hexA, hexB) {
     let dist = this.cubeDistance(hexA, hexB);
-    var arr = [];
+    let arr = [];
     for (let i = 0; i <= dist; i++) {
       let center = this.hexToPix(
         this.cubeRound(this.cubeLinearInt(hexA, hexB, (1.0 / dist) * i))
@@ -773,12 +789,12 @@ class Canvas extends Component {
 
   cubeDirection(direction) {
     const cubeDirections = [
-      this.Hex(1, 0, -1),
-      this.Hex(1, -1, 0),
-      this.Hex(0, -1, 1),
-      this.Hex(-1, 0, 1),
+      this.Hex(0, 1, -1),
       this.Hex(-1, 1, 0),
-      this.Hex(0, 1, -1)
+      this.Hex(-1, 0, 1),
+      this.Hex(0, -1, 1),
+      this.Hex(1, -1, 0),
+      this.Hex(1, 0, -1),
     ];
     return cubeDirections[direction];
   }
@@ -809,13 +825,13 @@ class Canvas extends Component {
 
   breadthFirstSearch(playerPosition) {
     let {obstacles, hexPathMap} = this.state;
-    var frontier = [playerPosition];
-    var cameFrom = {};
-    var nearestObstacles = [];
+    let frontier = [playerPosition];
+    let cameFrom = {};
+    let nearestObstacles = [];
     cameFrom[JSON.stringify(playerPosition)] = JSON.stringify(playerPosition);
 
     while (frontier.length != 0) {
-      var current = frontier.shift();
+      let current = frontier.shift();
       let arr = this.getNeighbors(current);
       arr.map(element => {
         if (
