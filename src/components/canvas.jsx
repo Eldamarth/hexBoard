@@ -393,6 +393,14 @@ class Canvas extends Component {
     return { x: x, y: y };
   }
 
+  PointWithAngle(x,y,angle){
+    return {
+      x: x,
+      y: y,
+      a: angle,
+    }
+  }
+
   Hex(c, r, s) {
     return { col: c, row: r, s: s };
   }
@@ -582,19 +590,19 @@ class Canvas extends Component {
   visibleField() {
     const { playerPosition, hexSides, playerSight } = this.state;
     let endPoints = [];
-    for (let i = 0; i < hexSides.length; i++) {
-      let side = JSON.parse(hexSides[i]);
-      this.drawLine(
-        this.canvasInteraction,
-        { x: side.start.x, y: side.start.y },
-        { x: side.end.x, y: side.end.y },
-        1,
-        "black"
-      );
-    }
+    // for (let i = 0; i < hexSides.length; i++) {
+    //   let side = JSON.parse(hexSides[i]);
+    //   this.drawLine(
+    //     this.canvasInteraction,
+    //     { x: side.start.x, y: side.start.y },
+    //     { x: side.end.x, y: side.end.y },
+    //     1,
+    //     "black"
+    //   );
+    // }
     let center = this.hexToPix(playerPosition);
     for (let i = 0; i < 360; i++) {
-      let beam = this.getHexBeamsCoord(center, i, 800);
+      let beam = this.getBeamsCoord(center, i, 800);
       for (let i = 0; i < hexSides.length; i++) {
         let side = JSON.parse(hexSides[i]);
         let intersect = this.lineIntersect(
@@ -610,29 +618,58 @@ class Canvas extends Component {
         if (intersect) {
           const distance = this.getDistance(center, intersect);
           if (distance < playerSight) {
-            // this.drawLine(this.canvasInteraction, center, intersect, 1, "yellow");
-            endPoints.push(intersect);
+
+            const point = this.PointWithAngle(intersect.x,intersect.y,beam.a)
+            endPoints.push(point);
           } else {
             const t = playerSight / distance;
-            const point = this.Point(
+            const point = this.PointWithAngle(
               (1 - t) * center.x + t * intersect.x,
-              (1 - t) * center.y + t * intersect.y
+              (1 - t) * center.y + t * intersect.y,
+              beam.a
             );
-            // this.drawLine(this.canvasInteraction, center, point, 1, "yellow");
+       
             endPoints.push(point);
           }
           break;
         }
-        // else {
-        //   this.drawLine(this.canvasInteraction, center, beam, 1, "yellow");
-        // }
       }
-      // this.drawLine(this.canvasInteraction, lineStart, lineEnd, 1, "red");
     }
     this.clearFog(endPoints);
+    console.log(this.isHexVisible(this.Hex(0,0,0,), endPoints))
+  }
+  
+
+  // FOR VIDEO 18 (OUT OF ORDER)
+  isHexVisible(hex, endPoints){
+    const playerCenter = this.hexToPix(this.state.playerPosition);
+    const hexCenter = this.hexToPix(hex);
+    this.drawLine(this.canvasInteraction,playerCenter, hexCenter,1,"orange")
+    // for (let i = 0; i < 6; i++) {
+      // const start = this.getHexCornerCoord(hexCenter, i);
+      // const end = this.getHexCornerCoord(hexCenter,i+1);
+    // }
+    const deltaX = hexCenter.x - playerCenter.x;
+    const deltaY = hexCenter.y - playerCenter.y;
+    let angle = Math.round(Math.atan2(deltaY, deltaX)* 180/ Math.PI);
+    if (angle < 0) {
+      angle = angle + 360;
+    }
+    const beam = endPoints.filter(v => v.a === angle)[0];
+    if (beam) {
+      this.drawLine(this.canvasInteraction,playerCenter, beam,1,"blue")
+      for (let i = 0; i < 6; i++) {
+        const start = this.getHexCornerCoord(hexCenter, i);
+        const end = this.getHexCornerCoord(hexCenter,i+1);
+        const intersect = this.lineIntersect(playerCenter.x, playerCenter.y, beam.x, beam.y, start.x,start.y,end.x,end.y);
+        if (intersect !== false){
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
-  // VIDEO STOP AT 15:49
   clearFog(endPoints) {
     const {playerPosition,playerSight} = this.state;
     const {canvasHeight, canvasWidth} = this.state.canvasSize;
@@ -779,7 +816,15 @@ class Canvas extends Component {
     let angle_rad = (Math.PI / 180) * angle_deg;
     let x = center.x + range * Math.cos(angle_rad);
     let y = center.y + range * Math.sin(angle_rad);
-    return this.Point(x, y);
+    return this.Point(x, y, angle_deg);
+  }
+
+  getBeamsCoord(center, i, range) {
+    let angle_deg = 1 * i;
+    let angle_rad = (Math.PI / 180) * angle_deg;
+    let x = center.x + range * Math.cos(angle_rad);
+    let y = center.y + range * Math.sin(angle_rad);
+    return this.PointWithAngle(x, y, angle_deg);
   }
 
   drawObstacles() {
